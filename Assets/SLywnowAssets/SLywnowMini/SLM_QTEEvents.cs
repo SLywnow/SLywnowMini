@@ -6,7 +6,6 @@ using System.Transactions;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using UnityStandardAssets.CrossPlatformInput;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -41,6 +40,7 @@ public class SLM_QTEEvents : MonoBehaviour
     [HideInInspector] public int loseC;
     [HideInInspector] public UnityEvent winE;
     [HideInInspector] public UnityEvent loseE;
+    [HideInInspector] public List<string> pressed = new List<string>();
 
 
     float timer=0;
@@ -60,6 +60,8 @@ public class SLM_QTEEvents : MonoBehaviour
     float reactMinPos;
     float reactMaxPos;
     int curlife;
+
+
 
     public void Start()
 	{
@@ -176,18 +178,18 @@ public class SLM_QTEEvents : MonoBehaviour
                             {
                                 if (presets[curid].mode[stage] == SLM_QTEEvents_Preset.tpe.pressTogether)
                                 {
-                                    if (CrossPlatformInputManager.GetButtonDown(bt.name))
+                                    if (Input.GetButtonDown(bt.name) || pressed.Contains(bt.name))
                                         has++;
                                 }
                                 else if (presets[curid].mode[stage] == SLM_QTEEvents_Preset.tpe.withhold)
                                 {
-                                    if (CrossPlatformInputManager.GetButton(bt.name))
+                                    if (Input.GetButton(bt.name) || pressed.Contains(bt.name))
                                         has++;
                                 }
                                 else if (presets[curid].mode[stage] == SLM_QTEEvents_Preset.tpe.savePress)
                                 {
                                     if (bt.pressed) has++;
-                                    else if (CrossPlatformInputManager.GetButton(bt.name))
+                                    else if (Input.GetButton(bt.name) || pressed.Contains(bt.name))
                                     {
                                         bt.pressed = true;
                                         if (presets[curid].useColor)
@@ -200,18 +202,18 @@ public class SLM_QTEEvents : MonoBehaviour
                             {
                                 if (presets[curid].mode[stage] == SLM_QTEEvents_Preset.tpe.pressTogether)
                                 {
-                                    if (Input.GetKeyDown(bt.key))
+                                    if (Input.GetKeyDown(bt.key) || pressed.Contains(bt.name))
                                         has++;
                                 }
                                 else if (presets[curid].mode[stage] == SLM_QTEEvents_Preset.tpe.withhold)
                                 {
-                                    if (Input.GetKey(bt.key))
+                                    if (Input.GetKey(bt.key) || pressed.Contains(bt.name))
                                         has++;
                                 }
                                 else if (presets[curid].mode[stage] == SLM_QTEEvents_Preset.tpe.savePress)
                                 {
                                     if (bt.pressed) has++;
-                                    else if (Input.GetKey(bt.key))
+                                    else if (Input.GetKey(bt.key) || pressed.Contains(bt.name))
                                     {
                                         bt.pressed = true;
                                         if (presets[curid].useColor)
@@ -230,11 +232,11 @@ public class SLM_QTEEvents : MonoBehaviour
                                 bool miss = false;
                                 if (bt.useInput)
                                 {
-                                    if (CrossPlatformInputManager.GetButtonDown(bt.name))
+                                    if (Input.GetButtonDown(bt.name) || pressed.Contains(bt.name))
                                         miss = true;
                                 }
                                 else
-                                    if (Input.GetKeyDown(bt.key))
+                                    if (Input.GetKeyDown(bt.key) || pressed.Contains(bt.name))
                                     miss = true;
 
                                 if (miss)
@@ -286,6 +288,7 @@ public class SLM_QTEEvents : MonoBehaviour
                         if (ok)
                         {
                             stage++;
+                            pressed = new List<string>();
                             //Debug.Log(stage);
                             ok = false;
                             foreach (string b in butts)
@@ -345,26 +348,32 @@ public class SLM_QTEEvents : MonoBehaviour
 						{
                             if (buttons[presets[curid].buttonPossitive].useInput)
                             {
-                                if (CrossPlatformInputManager.GetButtonDown(buttons[presets[curid].buttonPossitive].name))
+                                if (Input.GetButtonDown(buttons[presets[curid].buttonPossitive].name) || pressed.Contains(buttons[presets[curid].buttonNegative].name))
                                 {
                                     if (presets[curid].useColor)
                                     {
                                         buttons[presets[curid].buttonPossitive].obj.GetComponent<Image>().color = presets[curid].ColorPressed;
                                         buttons[presets[curid].buttonNegative].obj.GetComponent<Image>().color = presets[curid].NonPressed;
                                     }
+
+                                    if (pressed.Contains(buttons[presets[curid].buttonNegative].name))
+                                        pressed.Remove(buttons[presets[curid].buttonNegative].name);
                                     curpos += presets[curid].addCount;
                                     positive = false;
                                 }
                             }
                             else
 							{
-                                if (Input.GetKeyDown(buttons[presets[curid].buttonPossitive].key))
+                                if (Input.GetKeyDown(buttons[presets[curid].buttonPossitive].key) || pressed.Contains(buttons[presets[curid].buttonNegative].name))
                                 {
                                     if (presets[curid].useColor)
                                     {
                                         buttons[presets[curid].buttonPossitive].obj.GetComponent<Image>().color = presets[curid].ColorPressed;
                                         buttons[presets[curid].buttonNegative].obj.GetComponent<Image>().color = presets[curid].NonPressed;
                                     }
+
+                                    if (pressed.Contains(buttons[presets[curid].buttonNegative].name))
+                                        pressed.Remove(buttons[presets[curid].buttonNegative].name);
                                     curpos += presets[curid].addCount;
                                     positive = false;
                                 }
@@ -374,26 +383,32 @@ public class SLM_QTEEvents : MonoBehaviour
 						{
                             if (buttons[presets[curid].buttonPossitive].useInput)
                             {
-                                if (CrossPlatformInputManager.GetButtonDown(buttons[presets[curid].buttonNegative].name))
+                                if (Input.GetButtonDown(buttons[presets[curid].buttonNegative].name) || pressed.Contains(buttons[presets[curid].buttonPossitive].name))
                                 {
                                     if (presets[curid].useColor)
                                     {
                                         buttons[presets[curid].buttonPossitive].obj.GetComponent<Image>().color = presets[curid].NonPressed;
                                         buttons[presets[curid].buttonNegative].obj.GetComponent<Image>().color = presets[curid].ColorPressed;
                                     }
+
+                                    if (pressed.Contains(buttons[presets[curid].buttonPossitive].name))
+                                        pressed.Remove(buttons[presets[curid].buttonPossitive].name);
                                     curpos += presets[curid].addCount;
                                     positive = true;
                                 }
                             }
                             else
                             {
-                                if (Input.GetKeyDown(buttons[presets[curid].buttonNegative].key))
+                                if (Input.GetKeyDown(buttons[presets[curid].buttonNegative].key) || pressed.Contains(buttons[presets[curid].buttonPossitive].name))
                                 {
                                     if (presets[curid].useColor)
                                     {
                                         buttons[presets[curid].buttonPossitive].obj.GetComponent<Image>().color = presets[curid].NonPressed;
                                         buttons[presets[curid].buttonNegative].obj.GetComponent<Image>().color = presets[curid].ColorPressed;
                                     }
+
+                                    if (pressed.Contains(buttons[presets[curid].buttonPossitive].name))
+                                        pressed.Remove(buttons[presets[curid].buttonPossitive].name);
                                     curpos += presets[curid].addCount;
                                     positive = true;
                                 }
@@ -411,14 +426,14 @@ public class SLM_QTEEvents : MonoBehaviour
 
                         if (buttons[presets[curid].buttonPossitive].useInput)
                         {
-                            if (CrossPlatformInputManager.GetButton(buttons[presets[curid].buttonPossitive].name))
+                            if (Input.GetButton(buttons[presets[curid].buttonPossitive].name) || pressed.Contains(buttons[presets[curid].buttonPossitive].name))
                             {
                                 moveind = 1;
                             }
                         }
                         else
                         {
-                            if (Input.GetKey(buttons[presets[curid].buttonPossitive].key))
+                            if (Input.GetKey(buttons[presets[curid].buttonPossitive].key) || pressed.Contains(buttons[presets[curid].buttonPossitive].name))
                             {
                                 moveind = 1;
                             }
@@ -426,14 +441,14 @@ public class SLM_QTEEvents : MonoBehaviour
 
                         if (buttons[presets[curid].buttonNegative].useInput)
                         {
-                            if (CrossPlatformInputManager.GetButton(buttons[presets[curid].buttonNegative].name))
+                            if (Input.GetButton(buttons[presets[curid].buttonNegative].name) || pressed.Contains(buttons[presets[curid].buttonNegative].name))
                             {
                                 moveind = -1;
                             }
                         }
                         else
                         {
-                            if (Input.GetKey(buttons[presets[curid].buttonNegative].key))
+                            if (Input.GetKey(buttons[presets[curid].buttonNegative].key) || pressed.Contains(buttons[presets[curid].buttonNegative].name))
                             {
                                 moveind = -1;
                             }
@@ -462,14 +477,14 @@ public class SLM_QTEEvents : MonoBehaviour
                         bool presed = false;
                         if (buttons[presets[curid].buttonReaction].useInput)
                         {
-                            if (CrossPlatformInputManager.GetButtonDown(buttons[presets[curid].buttonReaction].name))
+                            if (Input.GetButtonDown(buttons[presets[curid].buttonReaction].name) || pressed.Contains(buttons[presets[curid].buttonReaction].name))
                             {
                                 presed = true;
                             }
                         }
                         else
                         {
-                            if (Input.GetKeyDown(buttons[presets[curid].buttonReaction].key))
+                            if (Input.GetKeyDown(buttons[presets[curid].buttonReaction].key) || pressed.Contains(buttons[presets[curid].buttonReaction].name))
                             {
                                 presed = true;
                             }
@@ -477,6 +492,9 @@ public class SLM_QTEEvents : MonoBehaviour
 
                         if (presed)
 						{
+                            if (pressed.Contains(buttons[presets[curid].buttonReaction].name))
+                                pressed.Remove(buttons[presets[curid].buttonReaction].name);
+
                             if (concSlider.value >= reactMinPos && concSlider.value <= reactMaxPos)
                             {
                                 curpos++;
@@ -626,6 +644,8 @@ public class SLM_QTEEvents : MonoBehaviour
 
     void ActivateQTE ()
 	{
+        pressed = new List<string>();
+
         if (progressSlider != null && !presets[curid].disableProgressVis)
         {
             progressSlider.gameObject.SetActive(true);
@@ -830,7 +850,6 @@ public class SLM_QTEEvents : MonoBehaviour
 public class SLM_QTEEvents_Button
 {
     public bool useInput;
-    [ShowFromBool("useInput",true)]
     public string name;
     [ShowFromBool("useInput", false)]
     public KeyCode key;
