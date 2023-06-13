@@ -31,7 +31,6 @@ public class SLM_Commands : MonoBehaviour
 
 
     float timer=-1;
-    List<string> cc=new List<string>();
     List<int> pointid = new List<int>();
     List<string> pointContain = new List<string>();
     List<int> pointidtext = new List<int>();
@@ -69,15 +68,9 @@ public class SLM_Commands : MonoBehaviour
 	{
         currentid = id;
         currentcommand = 0;
-        cc.Clear();
         savecurcomm.Clear();
         saveloopcom.Clear();
         loopcount.Clear();
-        foreach (SLM_Commands_CustomCommand c in blocks[id].customCommands)
-		{
-            cc.Add(c.name);
-            //Debug.Log(c.name);
-        }
 
         if (blocks[id].files.useLoadFromFiles)
 		{
@@ -122,17 +115,7 @@ public class SLM_Commands : MonoBehaviour
                             txts = FilesSet.LoadStream(blocks[id].files.pathToTexts, false).ToList();
                         }
                     }
-                    else
-                    {
-                        if (!string.IsNullOrEmpty(blocks[id].files.pathToCommands) && !(blocks[id].files.pathToCommands == "off"))
-                        {
-                            comms = System.Text.Encoding.UTF8.GetString(BetterStreamingAssets.ReadAllBytes(blocks[id].files.pathToCommands)).Split('\n').ToList();
-                        }
-                        if (!string.IsNullOrEmpty(blocks[id].files.pathToTexts) && !(blocks[id].files.pathToTexts == "off") && !blocks[id].files.useALSL)
-                        {
-                            txts = System.Text.Encoding.UTF8.GetString(BetterStreamingAssets.ReadAllBytes(blocks[id].files.pathToTexts)).Split('\n').ToList();
-                        }
-                    }
+
                     if (blocks[id].files.useALSL && !string.IsNullOrEmpty(blocks[id].files.ALSLFolder) && ALSLBridge == null)
                     {
                         string langname = ALSL_Main.alllangs[ALSL_Main.currentlang];
@@ -142,17 +125,6 @@ public class SLM_Commands : MonoBehaviour
                             string outputS = SaveSystemAlt.GetString("OutPutFiles");
                             if (!string.IsNullOrEmpty(outputS))
                                 txts = FilesSet.LoadStream(outputS + "/" + localpath, false).ToList();
-                        }
-                        else
-                        {
-                            string outputS = "ALSL";
-                            txts = System.Text.Encoding.UTF8.GetString(BetterStreamingAssets.ReadAllBytes(outputS + "/" + localpath)).Split('\n').ToList();
-                            if (!string.IsNullOrEmpty(SaveSystemAlt.GetString("OutPutFiles")))
-                            {
-                                if (!FilesSet.CheckDirectory(SaveSystemAlt.GetString("OutPutFiles") + "/" + blocks[id].files.ALSLFolder))
-                                    FilesSet.CreateDirectory(SaveSystemAlt.GetString("OutPutFiles") + "/" + blocks[id].files.ALSLFolder);
-                                FilesSet.SaveStream(SaveSystemAlt.GetString("OutPutFiles") + "/" + blocks[id].files.ALSLFolder + "/Example.lang", txts.ToArray(), false, false);
-                            }
                         }
                     }
                 }
@@ -237,7 +209,6 @@ public class SLM_Commands : MonoBehaviour
         currentid = -1;
         currentcommand = 0;
         savecurcomm.Clear();
-        cc.Clear();
     }
 
     public void RunNextCommand()
@@ -446,7 +417,7 @@ public class SLM_Commands : MonoBehaviour
                             if (commint.Count() != texts.Count())
                             {
                                 Debug.LogError("The number of texts and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
-                                onError("The number of texts and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
+                                onError?.Invoke("The number of texts and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
                                 return;
                             }
 
@@ -478,13 +449,13 @@ public class SLM_Commands : MonoBehaviour
                             if (commint.Count() != texts.Count())
                             {
                                 Debug.LogError("The number of texts and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
-                                onError("The number of texts and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
+                                onError?.Invoke("The number of texts and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
                                 return;
                             }
                             if (commint.Count() != boolsreal.Count())
                             {
                                 Debug.LogError("The number of bools and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
-                                onError("The number of bools and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
+                                onError?.Invoke("The number of bools and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
                                 return;
                             }
 
@@ -516,13 +487,13 @@ public class SLM_Commands : MonoBehaviour
                             if (commint.Count() != texts.Count())
                             {
                                 Debug.LogError("The number of texts and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
-                                onError("The number of texts and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
+                                onError?.Invoke("The number of texts and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
                                 return;
                             }
                             if (commint.Count() != boolsreal.Count())
                             {
                                 Debug.LogError("The number of bools and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
-                                onError("The number of bools and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
+                                onError?.Invoke("The number of bools and commands does not match!  (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
                                 return;
                             }
 
@@ -1118,7 +1089,7 @@ public class SLM_Commands : MonoBehaviour
                             if (vals.Length != commands.Length)
                             {
                                 Debug.LogError("The number of variables does not correspond to the number of commands! (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
-                                onError("The number of variables does not correspond to the number of commands! (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
+                                onError?.Invoke("The number of variables does not correspond to the number of commands! (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" )");
                                 if (blocks[currentid].autorunnextcommand && !stopIfError)
                                     RunNextCommand();
                                 return;
@@ -1193,9 +1164,9 @@ public class SLM_Commands : MonoBehaviour
                         }
                     case "cc":
                         {
-                            if (cc.Contains(comms[1]))
+                            if (blocks[currentid].customCommands.Find(f=> f.name == comms[1]) !=null)
                             {
-                                int idcc = cc.IndexOf(comms[1]);
+                                int idcc = blocks[currentid].customCommands.IndexOf(blocks[currentid].customCommands.Find(f => f.name == comms[1]));
 
                                 if (blocks[currentid].customCommands[idcc].type == SLM_Commands_CustomCommand.tpe.both)
                                 {
@@ -1258,8 +1229,8 @@ public class SLM_Commands : MonoBehaviour
             }
             catch (System.Exception err)
             {
-                Debug.LogError("Command line error! (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" ) Error:" + err);
-                onError("Command found, but it has problem with read, check the spelling! (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\" ) Error:" + err);
+                Debug.LogError("Command line error! (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\") Error:" + err);
+                onError?.Invoke("Command found, but it has problem with read, check the spelling! (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[id] + "\") Error:" + err);
                 if (blocks[currentid].autorunnextcommand && !stopIfError)
                     RunNextCommand();
             }
@@ -1267,7 +1238,7 @@ public class SLM_Commands : MonoBehaviour
         else
         {
             Debug.LogError("A single block is not running, call the RunBlock(id)");
-            onError("A single block is not running, call the RunBlock(id)");
+            onError?.Invoke("A single block is not running, call the RunBlock(id)");
         }
 
     }
@@ -1275,7 +1246,7 @@ public class SLM_Commands : MonoBehaviour
     public void Error(string text)
 	{
         Debug.LogError("Error! (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[currentcommand] + "\" ) Error: " + text);
-        onError("Error! (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[currentcommand] + "\" ) Error: " + text);
+        onError?.Invoke("Error! (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[currentcommand] + "\" ) Error: " + text);
     }
 
     public int ValueWorkCommand(string input)
@@ -1311,7 +1282,7 @@ public class SLM_Commands : MonoBehaviour
                 else
                 {
                     Debug.LogError("Point not found!");
-                    onError("Point not found!");
+                    onError?.Invoke("Point not found!");
                     output = -1;
                 }
             }
@@ -1326,7 +1297,7 @@ public class SLM_Commands : MonoBehaviour
                 else
                 {
                     Debug.LogError("Point not found!");
-                    onError("Point not found!");
+                    onError?.Invoke("Point not found!");
                     output = -1;
                 }
             }
@@ -1409,7 +1380,7 @@ public class SLM_Commands : MonoBehaviour
                 else
                 {
                     Debug.LogError("Point not found!");
-                    onError("Point not found!");
+                    onError?.Invoke("Point not found!");
                     output = -1;
                 }
             }
@@ -1423,7 +1394,7 @@ public class SLM_Commands : MonoBehaviour
                 else
                 {
                     Debug.LogError("Text point not found!");
-                    onError("Text point not found!");
+                    onError?.Invoke("Text point not found!");
                     output = -1;
                 }
             }
@@ -1474,12 +1445,46 @@ public class SLM_Commands : MonoBehaviour
                 output = !SaveSystemAlt.GetBool(parts[2], bool.Parse(parts[3]));
             else if (parts[1] == "checkstatint")
             {
-                output = (stats.GetValue(parts[2], (int)0) == int.Parse(parts[3]));
-            }
+                string mode = "==";
+                if (parts.Length>4)
+                {
+                    mode = parts[4];
+				}
+                if (mode == "==")
+                    output = (stats.GetValue(parts[2], (int)0) == int.Parse(parts[3]));
+                else if (mode == ">=")
+					output = (stats.GetValue(parts[2], (int)0) >= int.Parse(parts[3]));
+				else if (mode == ">")
+					output = (stats.GetValue(parts[2], (int)0) > int.Parse(parts[3]));
+				else if (mode == "<=")
+					output = (stats.GetValue(parts[2], (int)0) <= int.Parse(parts[3]));
+				else if (mode == "<")
+					output = (stats.GetValue(parts[2], (int)0) < int.Parse(parts[3]));
+				else if (mode == "!=")
+					output = (stats.GetValue(parts[2], (int)0) != int.Parse(parts[3]));
+
+			}
             else if (parts[1] == "checkstatfloat")
             {
-                output = (stats.GetValue(parts[2], 0f) == float.Parse(parts[3]));
-            }
+				string mode = "==";
+				if (parts.Length > 4)
+				{
+					mode = parts[4];
+				}
+                if (mode == "==")
+                    output = (stats.GetValue(parts[2], (int)0) == float.Parse(parts[3]));
+                else if (mode == ">=")
+                    output = (stats.GetValue(parts[2], (int)0) >= float.Parse(parts[3]));
+                else if (mode == ">")
+                    output = (stats.GetValue(parts[2], (int)0) > float.Parse(parts[3]));
+                else if (mode == "<=")
+                    output = (stats.GetValue(parts[2], (int)0) <= float.Parse(parts[3]));
+                else if (mode == "<")
+                    output = (stats.GetValue(parts[2], (int)0) < float.Parse(parts[3]));
+                else if (mode == "!=")
+                    output = (stats.GetValue(parts[2], (int)0) != float.Parse(parts[3]));
+
+			}
         }
         else
         {
@@ -1533,7 +1538,7 @@ public class SLM_Commands : MonoBehaviour
                 else
                 {
                     Debug.LogError("Text point not found!");
-                    onError("Text point not found!");
+                    onError?.Invoke("Text point not found!");
                     output = "Text point not found!";
                 }
             }
