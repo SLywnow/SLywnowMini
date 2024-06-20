@@ -74,6 +74,8 @@ public class SLM_Commands_Debugger : EditorWindow
 					GUILayout.Label("Current text: " + main.curtext);
 					if (main.imagesc != null && !string.IsNullOrEmpty(main.curimglayer))
 						GUILayout.Label("Last image change: " + main.curimgnum + " in " + main.curimglayer);
+					if (main.blocks[main.currentid].usePoints)
+						GUILayout.Label("Last point: " + main.lastpoint);
 					GUILayout.EndHorizontal();
 
 					if (GUILayout.Button("Force next command"))

@@ -14,14 +14,17 @@ public class SLM_ALSLBridge : MonoBehaviour
     public SLM_Commands commands;
     [Tooltip("Force Activate ALSL, need if you want test scene without loading (Works on in Editor)")]
     public bool ALSLDebugMode=true;
+    public enum fileMode {_old, _new };
+    public fileMode jsonMode;
     public SLM_ALSLBridge_SetUp setup;
 
     public SLM_ALSLBridge_LoaderStrings setupStrings;
+    public SLM_ALSLBridge_LoaderStringsV2 setupStringsV2;
 
-    //[HideInInspector] 
+    [HideInInspector] 
     public List<string> loadedBlock;
-    //[HideInInspector] 
-    public SLM_ALSLBridge_LoaderStrings loadedStrings;
+    [HideInInspector] 
+    public SLM_ALSLBridge_LoaderStringsV2 loadedStrings;
     [HideInInspector] public List<SLM_BridgeText> texts;
 
     [HideInInspector] public SLM_ALSLBridge_LoaderStrings forceLoadedStrings = null;
@@ -32,7 +35,6 @@ public class SLM_ALSLBridge : MonoBehaviour
 	{
         if (ALSLDebugMode)
         {
-            BetterStreamingAssets.Initialize();
             StartingSLAL.Restart();
         }
         if (setup.useCustomSetUp)
@@ -43,7 +45,7 @@ public class SLM_ALSLBridge : MonoBehaviour
         LoadStrings();
 	}
 
-   [Button("Add all exist langs", ButtonSpacing.Before)]
+   [Button("Add all exist langs", ButtonMode.DisabledInPlayMode, ButtonSpacing.Before)]
     public void AddAllLangs()
 	{
         List<string> l = new List<string>();
@@ -76,11 +78,16 @@ public class SLM_ALSLBridge : MonoBehaviour
         }
     }
 
-    [Button("Create new files", ButtonSpacing.Before)]
+    [Button("Create new files", ButtonMode.DisabledInPlayMode, ButtonSpacing.Before)]
     public void CreateFiles()
     {
-        string sv = JsonUtility.ToJson(setupStrings, true);
-        List<List<string>> svblocks = new List<List<string>>();
+        string sv = "";
+        if (jsonMode==fileMode._old)
+            sv = JsonUtility.ToJson(setupStrings, true);
+        else 
+            sv = JsonUtility.ToJson(setupStringsV2, true);
+
+		List<List<string>> svblocks = new List<List<string>>();
         if (commands != null)
         {
             for (int i = 0; i < commands.blocks.Count; i++)
@@ -135,11 +142,20 @@ public class SLM_ALSLBridge : MonoBehaviour
         }
 
     }
-    [Button("Update all files", ButtonSpacing.Before)]
+    [Button("Update all files", ButtonMode.DisabledInPlayMode, ButtonSpacing.Before)]
     public void ForceRecreateFiles()
 	{
-        string sv = JsonUtility.ToJson(setupStrings, true);
-        List<List<string>> svblocks = new List<List<string>>();
+		string sv = "";
+        if (jsonMode == fileMode._old)
+        {
+            sv = JsonUtility.ToJson(setupStrings, true);
+        }
+        else
+        {
+            sv = JsonUtility.ToJson(setupStringsV2, true);
+        }
+
+		List<List<string>> svblocks = new List<List<string>>();
         if (commands != null)
         {
             for (int i = 0; i < commands.blocks.Count; i++) 
@@ -215,8 +231,36 @@ public class SLM_ALSLBridge : MonoBehaviour
 
             for (int i = 0; i < l.Count; i++)
             {
+
                 if (!string.IsNullOrEmpty(p[i]) && !setup.dontUpdateStrings)
+                {
+                    if (FilesSet.CheckFile(p[i]) && jsonMode == fileMode._new)
+                    {
+                        SLM_ALSLBridge_LoaderStringsV2 curfile = JsonUtility.FromJson<SLM_ALSLBridge_LoaderStringsV2>(FilesSet.LoadStream(p[i], false, false));
+
+                        SLM_ALSLBridge_LoaderStringsV2 tosave = setupStringsV2.Copy();
+
+                        if (curfile == null || curfile.data == null)
+                        {
+                            curfile = new SLM_ALSLBridge_LoaderStringsV2();
+                            curfile.data = new List<SLM_ALSLBridge_LoaderStringsV2_Key>();
+                        }
+
+                        for (int s = 0; s < tosave.data.Count; s++)
+                        {
+                            SLM_ALSLBridge_LoaderStringsV2_Key key = curfile.data.Find(f => f.key == tosave.data[s].key);
+
+                            if (key != null)
+                                tosave.data[s].word = key.word;
+                        }
+
+                        sv = JsonUtility.ToJson(tosave, true);
+
+                    }
                     FilesSet.SaveStream(p[i], sv, false, false);
+                }
+
+
                 for (int a = 0; a < st[i].Count; a++)
                     if (!string.IsNullOrEmpty(st[i][a]) && !setup.dontUpdateTexts)
                         FilesSet.SaveStream(st[i][a], svblocks[a].ToArray(), false, false);
@@ -227,13 +271,16 @@ public class SLM_ALSLBridge : MonoBehaviour
 
     }
 
-    [Button("Get texts from files", ButtonSpacing.Before)]
+    [Button("Get texts from files", ButtonMode.DisabledInPlayMode, ButtonSpacing.Before)]
     public void GetTextToCommand()
 	{
         if (setup.useCustomSetUp)
 		{
-            if (setup.customSets[0].stringsFile!=null)
-                setupStrings = JsonUtility.FromJson <SLM_ALSLBridge_LoaderStrings> ((setup.customSets[0].stringsFile as TextAsset).text);
+            if (setup.customSets[0].stringsFile != null)
+            {
+                setupStrings = JsonUtility.FromJson<SLM_ALSLBridge_LoaderStrings>((setup.customSets[0].stringsFile as TextAsset).text);
+                setupStringsV2 = JsonUtility.FromJson<SLM_ALSLBridge_LoaderStringsV2>((setup.customSets[0].stringsFile as TextAsset).text);
+			}
             for (int i=0;i<commands.blocks.Count;i++)
 			{
                 if (setup.customSets[0].textFiles[i] !=null)
@@ -242,19 +289,44 @@ public class SLM_ALSLBridge : MonoBehaviour
         }
 	}
 
+    [Button("Update strings format to new",ButtonMode.DisabledInPlayMode, ButtonSpacing.After)]
+    public void ConvertStringsFromOldToNew()
+    {
+        if (jsonMode==fileMode._old)
+        {
+            setupStringsV2 = new SLM_ALSLBridge_LoaderStringsV2();
+            setupStringsV2.data = new List<SLM_ALSLBridge_LoaderStringsV2_Key>();
+			for (int i = 0; i < setupStrings.words.Count; i++)
+            {
+                setupStringsV2.data.Add(new SLM_ALSLBridge_LoaderStringsV2_Key() { key = setupStrings.keys[i], word = setupStrings.words[i] });
+			}
+
+            jsonMode = fileMode._new;
+        }
+    }
+
     public string GetStringEditor(string key)
 	{
         string ret = "";
 
 #if UNITY_EDITOR
         if (!string.IsNullOrEmpty(key))
-		{
-            if (setupStrings.keys.Contains(key))
-			{
-                if (setupStrings.words.Count > setupStrings.keys.IndexOf(key))
-                    return setupStrings.words[setupStrings.keys.IndexOf(key)];
+        {
+            if (jsonMode == fileMode._old)
+            {
+                if (setupStrings.keys.Contains(key))
+                {
+                    if (setupStrings.words.Count > setupStrings.keys.IndexOf(key))
+                        return setupStrings.words[setupStrings.keys.IndexOf(key)];
+                }
             }
-		}
+            else if (jsonMode == fileMode._new)
+            {
+                if (setupStringsV2.data.Find(f => f.key == key) != null)
+                    return setupStringsV2.data.Find(f => f.key == key).word;
+
+			}
+        }
 #endif
 
         return ret;
@@ -262,10 +334,33 @@ public class SLM_ALSLBridge : MonoBehaviour
 
     public string GetString (string key)
 	{
-        string ret = "";
-        if (loadedStrings.keys.Contains(key))
-            ret = loadedStrings.words[loadedStrings.keys.IndexOf(key)];
-        ret = ALSL_Main.FindKeysInString(ret);
+		string ret = "";
+		bool appPlays = true;
+#if UNITY_EDITOR
+        if (!EditorApplication.isPlaying)
+            appPlays = false;
+#endif
+        if (appPlays)
+        {
+            if (key.Contains("vw//gettextpoint//"))
+                ret = commands.ValueWorkString(key);
+            else if (loadedStrings != null && loadedStrings.data.Find(f => f.key == key) != null)
+                ret = loadedStrings.data.Find(f => f.key == key).word;
+            ret = ALSL_Main.FindKeysInString(ret);
+        }
+        else
+        {
+            if (jsonMode == fileMode._old)
+            {
+                if (setupStrings != null && setupStrings.keys.Contains(key))
+                    ret = setupStrings.words[setupStrings.keys.IndexOf(key)];
+            }
+            else if (jsonMode == fileMode._new)
+            {
+                if (setupStringsV2 != null && setupStringsV2.data != null && setupStringsV2.data.Find(f => f.key == key) != null)
+                    ret = setupStringsV2.data.Find(f => f.key == key).word;
+			}
+		}
         return ret;
 	}
 
@@ -273,7 +368,7 @@ public class SLM_ALSLBridge : MonoBehaviour
     {
         if ((forceLoadedStrings == null || forceLoadedStrings.keys.Count==0) && !useOnlyForce)
         {
-            loadedStrings = new SLM_ALSLBridge_LoaderStrings();
+            loadedStrings = new SLM_ALSLBridge_LoaderStringsV2();
 
             if (setup.useALSLFolders)
             {
@@ -306,15 +401,6 @@ public class SLM_ALSLBridge : MonoBehaviour
                         else
                             loaded = (setup.customSets.Find(f => f.langName == ALSL_Main.alllangs[ALSL_Main.currentlang]).stringsFile as TextAsset).text;
                     }
-                    else
-                    {
-                        string outputS = "ALSL";
-
-                        if (BetterStreamingAssets.FileExists(outputS + "/" + curr))
-                            loaded = System.Text.Encoding.UTF8.GetString(BetterStreamingAssets.ReadAllBytes(outputS + "/" + curr));
-                        else
-                            loaded = System.Text.Encoding.UTF8.GetString(BetterStreamingAssets.ReadAllBytes(outputS + "/" + def));
-                    }
 
                     if (!string.IsNullOrEmpty(SaveSystemAlt.GetString("OutPutFiles")))
                     {
@@ -326,7 +412,12 @@ public class SLM_ALSLBridge : MonoBehaviour
                 }
 
                 if (!string.IsNullOrEmpty(loaded))
-                    loadedStrings = JsonUtility.FromJson<SLM_ALSLBridge_LoaderStrings>(loaded);
+                {
+                    if (jsonMode == fileMode._old)
+                        loadedStrings = Convertor(JsonUtility.FromJson<SLM_ALSLBridge_LoaderStrings>(loaded));
+                    else if (jsonMode == fileMode._new)
+                        loadedStrings = JsonUtility.FromJson<SLM_ALSLBridge_LoaderStringsV2>(loaded);
+				}
             }
             else
             {
@@ -363,17 +454,38 @@ public class SLM_ALSLBridge : MonoBehaviour
                 }
 
                 if (!string.IsNullOrEmpty(loaded))
-                    loadedStrings = JsonUtility.FromJson<SLM_ALSLBridge_LoaderStrings>(loaded);
-            }
+				{
+					if (jsonMode == fileMode._old)
+						loadedStrings = Convertor(JsonUtility.FromJson<SLM_ALSLBridge_LoaderStrings>(loaded));
+					else if (jsonMode == fileMode._new)
+						loadedStrings = JsonUtility.FromJson<SLM_ALSLBridge_LoaderStringsV2>(loaded);
+				}
+			}
 
             foreach (SLM_BridgeText bt in texts)
                 bt.UpdateText();
         }
         else
-            loadedStrings = forceLoadedStrings;
+            loadedStrings = Convertor(forceLoadedStrings);
     }
+    
+    public SLM_ALSLBridge_LoaderStringsV2 Convertor(SLM_ALSLBridge_LoaderStrings input)
+    {
+        SLM_ALSLBridge_LoaderStringsV2 ret = new SLM_ALSLBridge_LoaderStringsV2();
 
-    public void LoadBlock(int id)
+        ret.data = new List<SLM_ALSLBridge_LoaderStringsV2_Key>();
+
+
+		for (int i=0;i<input.keys.Count;i++)
+        {
+            ret.data.Add(new SLM_ALSLBridge_LoaderStringsV2_Key() { key = input.keys[i], word = input.words[i] });
+		}
+
+        return ret;
+
+	}
+
+	public void LoadBlock(int id)
     {
         if ((forceLoadedText == null || forceLoadedText.Count==0) && !useOnlyForce)
         {
@@ -420,13 +532,6 @@ public class SLM_ALSLBridge : MonoBehaviour
                             loadedBlock = (setup.customSets.Find(f => f.langName == ALSL_Main.alllangs[ALSL_Main.currentlang]).textFiles[id] as TextAsset).text.Split('\n').ToList();
                         else
                             loadedBlock = (setup.customSets.Find(f => f.langName == ALSL_Main.alllangs[ALSL_Main.currentlang]).textFiles[id] as TextAsset).text.Split('\n').ToList();
-                    }
-                    else
-                    {
-                        if (BetterStreamingAssets.FileExists(outputS + "/" + curr))
-                            loadedBlock = System.Text.Encoding.UTF8.GetString(BetterStreamingAssets.ReadAllBytes(outputS + "/" + curr)).Split('\n').ToList();
-                        else
-                            loadedBlock = System.Text.Encoding.UTF8.GetString(BetterStreamingAssets.ReadAllBytes(outputS + "/" + def)).Split('\n').ToList();
                     }
 
                     if (!string.IsNullOrEmpty(SaveSystemAlt.GetString("OutPutFiles")) && loadedBlock.Count > 0)
@@ -484,11 +589,12 @@ public class SLM_ALSLBridge : MonoBehaviour
         else
             loadedBlock = forceLoadedText;
 
-
+        /*
         for (int i = 0; i < loadedBlock.Count; i++)
             {
                 loadedBlock[i] = ALSL_Main.FindKeysInString(loadedBlock[i]);
-            }
+            }]
+        */
 
             for (int s = 0; s < loadedBlock.Count; s++)
             {
@@ -532,12 +638,50 @@ public class SLM_ALSLBridge_LoaderStrings
     public List<string> keys;
 }
 
+[System.Serializable]
+public class SLM_ALSLBridge_LoaderStringsV2
+{
+	public List<SLM_ALSLBridge_LoaderStringsV2_Key> data;
+
+    public SLM_ALSLBridge_LoaderStringsV2 Copy()
+    {
+        SLM_ALSLBridge_LoaderStringsV2 ret = new SLM_ALSLBridge_LoaderStringsV2();
+
+        ret.data = new List<SLM_ALSLBridge_LoaderStringsV2_Key>();
+
+        foreach (SLM_ALSLBridge_LoaderStringsV2_Key key in data)
+            ret.data.Add(key.Copy());
+
+        return ret;
+	}
+}
+
+[System.Serializable]
+public class SLM_ALSLBridge_LoaderStringsV2_Key
+{
+	public string key;
+	public string word;
+
+    public SLM_ALSLBridge_LoaderStringsV2_Key Copy()
+    {
+        SLM_ALSLBridge_LoaderStringsV2_Key ret = new SLM_ALSLBridge_LoaderStringsV2_Key();
+
+        ret.key = key;
+        ret.word = word;
+
+		return ret;
+
+	}
+}
+
 #if UNITY_EDITOR
 [CustomEditor(typeof(SLM_ALSLBridge))]
 [CanEditMultipleObjects]
 public class SLM_ALSLBridgeEditor : Editor
 {
     SerializedProperty commands;
+    SerializedProperty jsonMode;
+    SerializedProperty setupStringsV2;
     SerializedProperty ALSLDebugMode;
     SerializedProperty setup;
 
@@ -546,122 +690,140 @@ public class SLM_ALSLBridgeEditor : Editor
         commands = serializedObject.FindProperty("commands");
         ALSLDebugMode = serializedObject.FindProperty("ALSLDebugMode");
         setup = serializedObject.FindProperty("setup");
+		jsonMode = serializedObject.FindProperty("jsonMode");
+		setupStringsV2 = serializedObject.FindProperty("setupStringsV2");
     }
 
     public override void OnInspectorGUI()
     {
         SLM_ALSLBridge tg = (SLM_ALSLBridge)target;
 
-        if (GUILayout.Button("Add all exist langs"))
+        if (!Application.isPlaying)
         {
-            tg.AddAllLangs();
-        }
-        if (GUILayout.Button("Create new files"))
-        {
-            tg.CreateFiles();
-        }
-        if (GUILayout.Button("Update all files"))
-        {
-            tg.ForceRecreateFiles();
-        }
-        if (GUILayout.Button("Get texts from files"))
-        {
-            tg.GetTextToCommand();
+            if (GUILayout.Button("Add all exist langs"))
+            {
+                tg.AddAllLangs();
+            }
+            if (GUILayout.Button("Create new files"))
+            {
+                tg.CreateFiles();
+            }
+            if (GUILayout.Button("Update all files"))
+            {
+                tg.ForceRecreateFiles();
+            }
+            if (GUILayout.Button("Get texts from files"))
+            {
+                tg.GetTextToCommand();
+            }
+            if (GUILayout.Button("Update strings format to new"))
+            {
+                tg.ConvertStringsFromOldToNew();
+            }
         }
 
-        EditorGUILayout.PropertyField(commands);
+		EditorGUILayout.PropertyField(commands);
+        EditorGUILayout.PropertyField(jsonMode);
         EditorGUILayout.PropertyField(ALSLDebugMode);
         EditorGUILayout.PropertyField(setup);
         serializedObject.ApplyModifiedProperties();
 
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.BeginVertical();
-        GUILayout.Label("Keys");
-        for (int i = 0; i < tg.setupStrings.keys.Count; i++)
+        if (tg.jsonMode == SLM_ALSLBridge.fileMode._new)
         {
-            int id = i;
-
-            tg.setupStrings.keys[id] = EditorGUILayout.TextField(tg.setupStrings.keys[id], GUILayout.Height(20));
-        }
-        EditorGUILayout.EndVertical();
-
-        EditorGUILayout.BeginVertical();
-        GUILayout.Label("Words");
-        for (int i = 0; i < tg.setupStrings.words.Count; i++)
+            EditorGUILayout.PropertyField(setupStringsV2);
+			serializedObject.ApplyModifiedProperties();
+		}
+        else if (tg.jsonMode == SLM_ALSLBridge.fileMode._old)
         {
-            int id = i;
-
-            tg.setupStrings.words[id] = EditorGUILayout.TextField(tg.setupStrings.words[id], GUILayout.Height(20));
-        }
-        EditorGUILayout.EndVertical();
-
-        EditorGUILayout.BeginVertical();
-        GUILayout.Label("");
-        for (int i = 0; i < tg.setupStrings.words.Count; i++)
-        {
-            int id = i;
-            if (GUILayout.Button("-", GUILayout.Height(20)))
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.BeginVertical();
+            GUILayout.Label("Keys");
+            for (int i = 0; i < tg.setupStrings.keys.Count; i++)
             {
-                tg.setupStrings.keys.RemoveAt(id);
-                tg.setupStrings.words.RemoveAt(id);
+                int id = i;
+
+                tg.setupStrings.keys[id] = EditorGUILayout.TextField(tg.setupStrings.keys[id], GUILayout.Height(20));
+            }
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginVertical();
+            GUILayout.Label("Words");
+            for (int i = 0; i < tg.setupStrings.words.Count; i++)
+            {
+                int id = i;
+
+                tg.setupStrings.words[id] = EditorGUILayout.TextField(tg.setupStrings.words[id], GUILayout.Height(20));
+            }
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginVertical();
+            GUILayout.Label("");
+            for (int i = 0; i < tg.setupStrings.words.Count; i++)
+            {
+                int id = i;
+                if (GUILayout.Button("-", GUILayout.Height(20)))
+                {
+                    tg.setupStrings.keys.RemoveAt(id);
+                    tg.setupStrings.words.RemoveAt(id);
+                    EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                }
+            }
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginVertical();
+            GUILayout.Label("");
+            for (int i = 0; i < tg.setupStrings.words.Count; i++)
+            {
+                if (i != 0)
+                {
+                    int id = i;
+                    int to = id - 1;
+                    if (GUILayout.Button("▲", GUILayout.Height(20)))
+                    {
+                        if (to >= 0)
+                        {
+                            tg.setupStrings.keys.Move(id, to);
+                            tg.setupStrings.words.Move(id, to);
+                            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                        }
+                    }
+                }
+                else
+                    GUILayout.Label("", GUILayout.Height(20));
+            }
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginVertical();
+            GUILayout.Label("");
+            for (int i = 0; i < tg.setupStrings.words.Count; i++)
+            {
+                if (i != tg.setupStrings.words.Count - 1)
+                {
+                    int id = i;
+                    int to = id + 1;
+                    if (GUILayout.Button("▼", GUILayout.Height(20)))
+                    {
+                        if (to < tg.setupStrings.keys.Count)
+                        {
+                            tg.setupStrings.keys.Move(id, to);
+                            tg.setupStrings.words.Move(id, to);
+                            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                        }
+                    }
+                }
+                else
+                    GUILayout.Label("", GUILayout.Height(20));
+
+            }
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.EndHorizontal();
+            if (GUILayout.Button("Add"))
+            {
+                tg.setupStrings.keys.Add("");
+                tg.setupStrings.words.Add("");
                 EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             }
-        }
-        EditorGUILayout.EndVertical();
-
-        EditorGUILayout.BeginVertical();
-        GUILayout.Label("");
-        for (int i = 0; i < tg.setupStrings.words.Count; i++)
-        {
-            if (i != 0)
-            {
-                int id = i;
-                int to = id - 1;
-                if (GUILayout.Button("▲", GUILayout.Height(20)))
-                {
-                    if (to >= 0)
-                    {
-                        tg.setupStrings.keys.Move(id, to);
-                        tg.setupStrings.words.Move(id, to);
-                        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-                    }
-                }
-            }
-            else
-                GUILayout.Label("", GUILayout.Height(20));
-        }
-        EditorGUILayout.EndVertical();
-
-        EditorGUILayout.BeginVertical();
-        GUILayout.Label("");
-        for (int i = 0; i < tg.setupStrings.words.Count; i++)
-        {
-            if (i != tg.setupStrings.words.Count - 1)
-            {
-                int id = i;
-                int to = id + 1;
-                if (GUILayout.Button("▼", GUILayout.Height(20)))
-                {
-                    if (to < tg.setupStrings.keys.Count)
-                    {
-                        tg.setupStrings.keys.Move(id, to);
-                        tg.setupStrings.words.Move(id, to);
-                        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-                    }
-                }
-            }
-            else
-                GUILayout.Label("", GUILayout.Height(20));
-
-        }
-        EditorGUILayout.EndVertical();
-
-        EditorGUILayout.EndHorizontal();
-        if (GUILayout.Button("Add"))
-        {
-            tg.setupStrings.keys.Add("");
-            tg.setupStrings.words.Add("");
-            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         }
     }
 }

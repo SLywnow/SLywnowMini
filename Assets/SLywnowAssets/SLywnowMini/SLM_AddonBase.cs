@@ -6,7 +6,9 @@ public class SLM_AddonBase : MonoBehaviour
 {
     public SLM_Commands commandScript;
 
+	[HideInInspector]
 	public List<string> commands;
+	[HideInInspector]
 	public List<bool> nextcommands;
 	public void AddCommand(string command, bool runNextCommand = true)
 	{

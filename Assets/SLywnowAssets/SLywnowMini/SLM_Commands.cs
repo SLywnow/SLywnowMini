@@ -38,6 +38,7 @@ public class SLM_Commands : MonoBehaviour
     [HideInInspector] public int curtext;
     [HideInInspector] public string curimglayer;
     [HideInInspector] public int curimgnum;
+    [HideInInspector] public string lastpoint;
     List<int> savecurcomm = new List<int>();
     List<int> saveloopcom = new List<int>();
     List<int> loopcount = new List<int>();
@@ -133,11 +134,11 @@ public class SLM_Commands : MonoBehaviour
             {
                 if (blocks[id].files.commandObject != null)
                 {
-                    comms = (blocks[id].files.commandObject as TextAsset).text.Split('\n').ToList();
+                    comms = (blocks[id].files.commandObject as TextAsset).text.Replace("\r", "").Trim((char)8203).Split('\n').ToList();
                 }
 
                 if (ALSLBridge == null && blocks[id].files.textObject != null)
-                    txts = (blocks[id].files.textObject as TextAsset).text.Split('\n').ToList();
+                    txts = (blocks[id].files.textObject as TextAsset).text.Replace("\r", "").Trim((char)8203).Split('\n').ToList();
             }
 
             if (blocks[id].files.useALSL && ALSLBridge != null)
@@ -223,7 +224,10 @@ public class SLM_Commands : MonoBehaviour
         {
             string point = ValueWorkString(name);
             if (pointContain.Contains(point))
-                RunCommand(pointid[pointContain.IndexOf(point)]);
+            {
+                lastpoint = point;
+				RunCommand(pointid[pointContain.IndexOf(point)]);
+            }
             else
                 Debug.LogError("Block " + currentid + "using point system, but point " + point + " not found! (command: " + currentcommand + ")");
         }
@@ -291,7 +295,8 @@ public class SLM_Commands : MonoBehaviour
                         }
                     case "setpoint":
                         {
-                            RunNextCommand();
+                            lastpoint = comms[1];
+							RunNextCommand();
                             break;
                         }
                     case "runpoint":
@@ -732,7 +737,45 @@ public class SLM_Commands : MonoBehaviour
                                         if (!(val == ValueWorkBool(comms[3]).ToString().ToLower())) isok = true;
                                 }
                             }
-                            if (comms[4] == "int" || comms[4] == "float")
+							if (comms[4] == "int")
+							{
+								float val = 0f;
+								if (comms[4] == "float")
+									val = stats.GetValue(comms[1], 0f);
+								else if (comms[4] == "int")
+									val = stats.GetValue(comms[1], 0);
+
+								if (comms[2] == "==")
+									if (val == ValueWorkInt(comms[3])) isok = true;
+								if (comms[2] == "!=")
+									if (!(val == ValueWorkInt(comms[3]))) isok = true;
+								if (comms[2] == ">")
+									if (val > ValueWorkInt(comms[3])) isok = true;
+								if (comms[2] == ">=")
+									if (val >= ValueWorkInt(comms[3])) isok = true;
+								if (comms[2] == "<")
+									if (val < ValueWorkInt(comms[3])) isok = true;
+								if (comms[2] == "<=")
+									if (val <= ValueWorkInt(comms[3])) isok = true;
+								if (comms[2] == "<>")
+								{
+									comms[3] = comms[3].Replace("||", "◌");
+									string[] coms = comms[3].Split('◌');
+									if (val > ValueWorkInt(coms[0]))
+										if (val < ValueWorkInt(coms[1]))
+											isok = true;
+								}
+								if (comms[2] == "<=>")
+								{
+									comms[3] = comms[3].Replace("||", "◌");
+									string[] coms = comms[3].Split('◌');
+									if (val >= ValueWorkInt(coms[0]))
+										if (val <= ValueWorkInt(coms[1]))
+											isok = true;
+								}
+							}
+
+							if (comms[4] == "float")
                             {
                                 float val = 0f;
                                 if (comms[4] == "float")
@@ -797,7 +840,7 @@ public class SLM_Commands : MonoBehaviour
                                         if (!(ValueWorkBool(comms[1]).ToString().ToLower() == ValueWorkBool(comms[3]).ToString().ToLower())) isok = true;
                                 }
                             }
-                            if (comms[4] == "int" || comms[4] == "float")
+                            if (comms[4] == "float")
                             {
                                 if (comms[2] == "==")
                                     if (ValueWorkFloat(comms[1]) == ValueWorkFloat(comms[3])) isok = true;
@@ -828,8 +871,39 @@ public class SLM_Commands : MonoBehaviour
                                             isok = true;
                                 }
                             }
+							if (comms[4] == "int")
+							{
+								if (comms[2] == "==")
+									if (ValueWorkInt(comms[1]) == ValueWorkInt(comms[3])) isok = true;
+								if (comms[2] == "!=")
+									if (!(ValueWorkInt(comms[1]) == ValueWorkInt(comms[3]))) isok = true;
+								if (comms[2] == ">")
+									if (ValueWorkInt(comms[1]) > ValueWorkInt(comms[3])) isok = true;
+								if (comms[2] == ">=")
+									if (ValueWorkInt(comms[1]) >= ValueWorkInt(comms[3])) isok = true;
+								if (comms[2] == "<")
+									if (ValueWorkInt(comms[1]) < ValueWorkInt(comms[3])) isok = true;
+								if (comms[2] == "<=")
+									if (ValueWorkInt(comms[1]) <= ValueWorkInt(comms[3])) isok = true;
+								if (comms[2] == "<>")
+								{
+									comms[3] = comms[3].Replace("||", "◌");
+									string[] coms = comms[3].Split('◌');
+									if (ValueWorkInt(comms[1]) > ValueWorkInt(coms[0]))
+										if (ValueWorkInt(comms[1]) < ValueWorkInt(coms[1]))
+											isok = true;
+								}
+								if (comms[2] == "<=>")
+								{
+									comms[3] = comms[3].Replace("||", "◌");
+									string[] coms = comms[3].Split('◌');
+									if (ValueWorkInt(comms[1]) >= ValueWorkInt(coms[0]))
+										if (ValueWorkInt(comms[1]) <= ValueWorkInt(coms[1]))
+											isok = true;
+								}
+							}
 
-                            if (isok)
+							if (isok)
                                 RunCommand(ValueWorkCommand(comms[5]));
                             else
                                 RunCommand(ValueWorkCommand(comms[6]));
@@ -1009,13 +1083,28 @@ public class SLM_Commands : MonoBehaviour
                             string sub = comms[1];
 
                             if (sub == "clip")
-                                audiosc.SelectClip(ValueWorkString(comms[2]), ValueWorkInt(comms[3]));
+
+                                try
+                                {
+                                    audiosc.SelectClip(ValueWorkString(comms[2]), ValueWorkInt(comms[3]));
+                                }
+                                catch
+                                {
+									audiosc.SelectClip(ValueWorkString(comms[2]), ValueWorkString(comms[3]));
+								}
                             else if (sub == "play")
                                 audiosc.StartPlay(ValueWorkString(comms[2]));
-                            else if (sub=="setplay")
-							{
-                                audiosc.SelectClip(ValueWorkString(comms[2]), ValueWorkInt(comms[3]));
-                                audiosc.StartPlay(ValueWorkString(comms[2]));
+                            else if (sub == "setplay")
+                            {
+								try
+								{
+									audiosc.SelectClip(ValueWorkString(comms[2]), ValueWorkInt(comms[3]));
+								}
+								catch
+								{
+									audiosc.SelectClip(ValueWorkString(comms[2]), ValueWorkString(comms[3]));
+								}
+								audiosc.StartPlay(ValueWorkString(comms[2]));
                             }
                             else if (sub == "stop")
                                 audiosc.StopPlay(ValueWorkString(comms[2]));
@@ -1249,173 +1338,222 @@ public class SLM_Commands : MonoBehaviour
         onError?.Invoke("Error! (block: " + currentid + "; command: " + currentcommand + " string: \"" + blocks[currentid].commands[currentcommand] + "\" ) Error: " + text);
     }
 
-    public int ValueWorkCommand(string input)
-    {
-        int output = 0;
-        if (input.IndexOf("vw") >= 0)
-        {
-            input = input.Replace("//", "◌");
-            string[] parts = input.Split('◌');
-            if (parts[1] == "random")
-                output = UnityEngine.Random.Range(int.Parse(parts[2]), int.Parse(parts[3] + 1));
-            else if (parts[1] == "randomvalues")
+   public int ValueWorkCommand(string input)
+   {
+      int output = 0;
+      if (input.IndexOf("vw") >= 0)
+      {
+         input = input.Replace("//", "◌");
+         string[] parts = input.Split('◌');
+         if (parts[1] == "random")
+            output = UnityEngine.Random.Range(int.Parse(parts[2]), int.Parse(parts[3] + 1));
+         else if (parts[1] == "randomvalues")
+         {
+            int r = UnityEngine.Random.Range(0, int.Parse(parts[2]));
+            output = int.Parse(parts[r + 3]);
+         }
+         else if (parts[1] == "getstat")
+            output = stats.GetValue(parts[2], 0);
+         else if (parts[1] == "getssa")
+         {
+            int def = 0;
+            if (parts.Length > 3)
+               def = int.Parse(parts[3]);
+            output = SaveSystemAlt.GetInt(parts[2], def);
+         }
+         else if (parts[1] == "getpoint")
+         {
+            int offset = 0;
+            if (parts.Length == 4)
+               offset = int.Parse(parts[3]);
+            if (pointContain.Contains(parts[2]))
+               output = pointid[pointContain.IndexOf(parts[2])] + offset;
+            else
             {
-                int r = UnityEngine.Random.Range(0, int.Parse(parts[2]));
-                output = int.Parse(parts[r + 3]);
+               Debug.LogError("Error! (block: " + currentid + "; command: " + currentcommand + ") Point " + parts[2] + " not found!");
+               onError?.Invoke("Error! (block: " + currentid + "; command: " + currentcommand + ") Point " + parts[2] + " not found!");
+               output = -1;
             }
-            else if (parts[1] == "getstat")
-                output = stats.GetValue(parts[2], 0);
-            else if (parts[1] == "getssa")
-            {
-                int def = 0;
-                if (parts.Length > 3)
-                    def = int.Parse(parts[3]);
-                output = SaveSystemAlt.GetInt(parts[2], def);
-            }
-            else if (parts[1] == "getpoint")
-            {
-                int offset = 0;
-                if (parts.Length == 4)
-                    offset = int.Parse(parts[3]);
-                if (pointContain.Contains(parts[2]))
-                    output = pointid[pointContain.IndexOf(parts[2])] + offset;
-                else
-                {
-                    Debug.LogError("Point not found!");
-                    onError?.Invoke("Point not found!");
-                    output = -1;
-                }
-            }
-            else if (parts[1] == "randompoints")
-            {
-                int r = UnityEngine.Random.Range(0, int.Parse(parts[2]));
+         }
+         else if (parts[1] == "randompoints")
+         {
+            int r = UnityEngine.Random.Range(0, int.Parse(parts[2]));
 
-                string p = parts[r + 3];
+            string p = parts[r + 3];
 
-                if (pointContain.Contains(p))
-                    output = pointid[pointContain.IndexOf(p)];
-                else
-                {
-                    Debug.LogError("Point not found!");
-                    onError?.Invoke("Point not found!");
-                    output = -1;
-                }
-            }
-            else if (parts[1] == "next")
+            if (pointContain.Contains(p))
+               output = pointid[pointContain.IndexOf(p)];
+            else
             {
-                int offset = 0;
-                //Debug.Log(input);
-                if (parts.Length >= 3)
-                    offset = int.Parse(parts[2]);
+               Debug.LogError("Point not found!");
+               onError?.Invoke("Point not found!");
+               output = -1;
+            }
+         }
+         else if (parts[1] == "next")
+         {
+            int offset = 0;
+            //Debug.Log(input);
+            if (parts.Length >= 3)
+               offset = int.Parse(parts[2]);
 
-                output = currentcommand + 1 + offset;
+            output = currentcommand + 1 + offset;
 
-            }
-        }
-        else
-        {
-            output = int.Parse(input);
-        }
+         }
+         else if (parts[1] == "mathv2")
+         {
+            List<string> vars = new List<string>();
+            List<float> varsV = new List<float>();
 
-        return output;
-    }
+            for (int i = 3; i < parts.Length; i++)
+            {
+               vars.Add(parts[i]);
+               varsV.Add(stats.GetValue(parts[i], 0f));
+            }
 
-    public int ValueWorkInt(string input)
-	{
-        int output= 0;
+            string math = parts[2];
 
-        if (input.IndexOf("vw") >= 0)
-        {
-            input = input.Replace("//", "◌");
-            string[] parts = input.Split('◌');
-            if (parts[1] == "random")
+            for (int i = 0; i < vars.Count; i++)
             {
-                output = UnityEngine.Random.Range(int.Parse(parts[2]), int.Parse(parts[3]));
+               math = math.Replace(vars[i], varsV[i].ToString());
             }
-            else if (parts[1] == "randomvalues")
-            {
-                int r = UnityEngine.Random.Range(0, int.Parse(parts[2]));
-                output = int.Parse(parts[r + 3]);
-            }
-            else if (parts[1] == "getstat")
-                output = stats.GetValue(parts[2], 0);
-            else if (parts[1] == "getstatwithinvalues")
-            {
-                output = stats.GetValue(parts[2], 0);
-                if (output < int.Parse(parts[3])) output = int.Parse(parts[3]);
-                if (output > int.Parse(parts[3])) output = int.Parse(parts[3]);
-            }
-            else if (parts[1] == "getstatmath")
-            {
-                string math = parts[3].Replace(parts[2], stats.GetValue(parts[2], 0f).ToString());
-                output = (int)float.Parse(new DataTable().Compute(math, "").ToString());
-            }
-            else if (parts[1] == "getssa")
-            {
-                int def = 0;
-                if (parts.Length > 3)
-                    def = int.Parse(parts[3]);
-                output = SaveSystemAlt.GetInt(parts[2], def);
-            }
-            else if (parts[1] == "getssawithinvalues")
-            {
-                output = SaveSystemAlt.GetInt(parts[2], 0);
-                if (output < int.Parse(parts[3])) output = int.Parse(parts[3]);
-                if (output > int.Parse(parts[4])) output = int.Parse(parts[4]);
-            }
-            else if (parts[1] == "getssamath")
-            {
-                string math = parts[3].Replace(parts[2], SaveSystemAlt.GetInt(parts[2], 0).ToString());
-                //Debug.Log(math);
-                output = (int)float.Parse(new DataTable().Compute(math, "").ToString());
-                //Debug.Log(output);
-            }
-            else if (parts[1] == "getpoint")
-            {
-                int offset = 0;
-                if (parts.Length == 4)
-                    offset = int.Parse(parts[3]);
-                if (pointContain.Contains(parts[2]))
-                    output = pointid[pointContain.IndexOf(parts[2])] + offset;
-                else
-                {
-                    Debug.LogError("Point not found!");
-                    onError?.Invoke("Point not found!");
-                    output = -1;
-                }
-            }
-            else if (parts[1] == "gettextpoint")
-            {
-                int offset = 0;
-                if (parts.Length == 4)
-                    offset = int.Parse(parts[3]);
-                if (pointContaintext.Contains(parts[2]))
-                    output = pointidtext[pointContaintext.IndexOf(parts[2])] + offset;
-                else
-                {
-                    Debug.LogError("Text point not found!");
-                    onError?.Invoke("Text point not found!");
-                    output = -1;
-                }
-            }
-            else if (parts[1] == "next")
-            {
-                int offset = 0;
-                //Debug.Log(input);
-                if (parts.Length >= 3)
-                    offset = int.Parse(parts[2]);
 
-                output = currentcommand + 1 + offset;
+            math = math.Replace(',', '.');
+            output = (int)float.Parse(new DataTable().Compute(math, "").ToString());
+         }
+      }
+      else
+      {
+         output = int.Parse(input);
+      }
 
+      return output;
+   }
+
+   public int ValueWorkInt(string input)
+   {
+      int output = 0;
+
+      if (input.IndexOf("vw") >= 0)
+      {
+         input = input.Replace("//", "◌");
+         string[] parts = input.Split('◌');
+         if (parts[1] == "random")
+         {
+            output = UnityEngine.Random.Range(int.Parse(parts[2]), int.Parse(parts[3]));
+         }
+         else if (parts[1] == "randomvalues")
+         {
+            int r = UnityEngine.Random.Range(0, int.Parse(parts[2]));
+            output = int.Parse(parts[r + 3]);
+         }
+         else if (parts[1] == "randombystats")
+         {
+            //vw//randombystats//statMin//statMax;;
+            int min = stats.GetValue(parts[2], 0);
+            int max = stats.GetValue(parts[3], 0);
+            output = UnityEngine.Random.Range(min, max);
+         }
+         else if (parts[1] == "getstat")
+            output = stats.GetValue(parts[2], 0);
+         else if (parts[1] == "getstatwithinvalues")
+         {
+            output = stats.GetValue(parts[2], 0);
+            if (output < int.Parse(parts[3])) output = int.Parse(parts[3]);
+            if (output > int.Parse(parts[4])) output = int.Parse(parts[4]);
+         }
+         else if (parts[1] == "getstatmath")
+         {
+            string math = parts[3].Replace(parts[2], stats.GetValue(parts[2], 0f).ToString());
+            output = (int)float.Parse(new DataTable().Compute(math, "").ToString());
+         }
+         else if (parts[1] == "getssa")
+         {
+            int def = 0;
+            if (parts.Length > 3)
+               def = int.Parse(parts[3]);
+            output = SaveSystemAlt.GetInt(parts[2], def);
+         }
+         else if (parts[1] == "getssawithinvalues")
+         {
+            output = SaveSystemAlt.GetInt(parts[2], 0);
+            if (output < int.Parse(parts[3])) output = int.Parse(parts[3]);
+            if (output > int.Parse(parts[4])) output = int.Parse(parts[4]);
+         }
+         else if (parts[1] == "getssamath")
+         {
+            string math = parts[3].Replace(parts[2], SaveSystemAlt.GetInt(parts[2], 0).ToString());
+            //Debug.Log(math);
+            output = (int)float.Parse(new DataTable().Compute(math, "").ToString());
+            //Debug.Log(output);
+         }
+         else if (parts[1] == "getpoint")
+         {
+            int offset = 0;
+            if (parts.Length == 4)
+               offset = int.Parse(parts[3]);
+            if (pointContain.Contains(parts[2]))
+               output = pointid[pointContain.IndexOf(parts[2])] + offset;
+            else
+            {
+               Debug.LogError("Point not found!");
+               onError?.Invoke("Point not found!");
+               output = -1;
             }
-        }
-        else
-        {
-            output = int.Parse(input);
-        }
+         }
+         else if (parts[1] == "gettextpoint")
+         {
+            int offset = 0;
+            if (parts.Length == 4)
+               offset = int.Parse(parts[3]);
+            if (pointContaintext.Contains(parts[2]))
+               output = pointidtext[pointContaintext.IndexOf(parts[2])] + offset;
+            else
+            {
+               Debug.LogError("Text point not found!");
+               onError?.Invoke("Text point not found!");
+               output = -1;
+            }
+         }
+         else if (parts[1] == "next")
+         {
+            int offset = 0;
+            //Debug.Log(input);
+            if (parts.Length >= 3)
+               offset = int.Parse(parts[2]);
 
-        return output;
-	}
+            output = currentcommand + 1 + offset;
+
+         }
+         else if (parts[1] == "mathv2")
+         {
+            List<string> vars = new List<string>();
+            List<float> varsV = new List<float>();
+
+            for (int i = 3; i < parts.Length; i++)
+            {
+               vars.Add(parts[i]);
+               varsV.Add(stats.GetValue(parts[i], 0f));
+            }
+
+            string math = parts[2];
+
+            for (int i = 0; i < vars.Count; i++)
+            {
+               math = math.Replace(vars[i], varsV[i].ToString());
+            }
+
+            math = math.Replace(',', '.');
+            output = (int) float.Parse(new DataTable().Compute(math, "").ToString());
+         }
+      }
+      else
+      {
+         output = int.Parse(input);
+      }
+
+      return output;
+   }
 
     public bool ValueWorkBool(string input)
     {
@@ -1450,7 +1588,8 @@ public class SLM_Commands : MonoBehaviour
                 {
                     mode = parts[4];
 				}
-                if (mode == "==")
+
+				if (mode == "==")
                     output = (stats.GetValue(parts[2], (int)0) == int.Parse(parts[3]));
                 else if (mode == ">=")
 					output = (stats.GetValue(parts[2], (int)0) >= int.Parse(parts[3]));
@@ -1462,7 +1601,6 @@ public class SLM_Commands : MonoBehaviour
 					output = (stats.GetValue(parts[2], (int)0) < int.Parse(parts[3]));
 				else if (mode == "!=")
 					output = (stats.GetValue(parts[2], (int)0) != int.Parse(parts[3]));
-
 			}
             else if (parts[1] == "checkstatfloat")
             {
@@ -1542,8 +1680,29 @@ public class SLM_Commands : MonoBehaviour
                     output = "Text point not found!";
                 }
             }
-
-        }
+			else if (parts[1] == "gettext")
+			{
+            try
+            {
+               int offset = 0;
+               if (parts.Length == 4)
+                  offset = int.Parse(parts[3]);
+               int textnum = int.Parse(parts[2]);
+               output = blocks[currentid].texts[textnum + offset];
+            }
+            catch 
+				{
+					Debug.LogError("Can't convert into int!");
+					onError?.Invoke("Can't convert into int!");
+					output = "Can't convert into int!";
+				}
+			}
+			else if (parts[1] == "gettextfromstat")
+			{
+            int textnum = stats.GetValue(parts[2], 0);
+					output = blocks[currentid].texts[textnum];
+			}
+		}
         else
         {
             try
@@ -1573,7 +1732,14 @@ public class SLM_Commands : MonoBehaviour
                 int r = UnityEngine.Random.Range(0, int.Parse(parts[2]));
                 output = int.Parse(parts[r + 3]);
             }
-            else if (parts[1] == "getstat")
+			else if (parts[1] == "randombystats")
+			{
+				//vw//randombystats//statMin//statMax;;
+				float min = stats.GetValue(parts[2], 0);
+				float max = stats.GetValue(parts[3], 0);
+				output = UnityEngine.Random.Range(min, max);
+			}
+			else if (parts[1] == "getstat")
                 output = stats.GetValue(parts[2], 0f);
             else if (parts[1] == "getstatwithinvalues")
             {
@@ -1608,7 +1774,28 @@ public class SLM_Commands : MonoBehaviour
                 string math = parts[3].Replace(parts[2], SaveSystemAlt.GetFloat(parts[2], 0f).ToString());
                 output = float.Parse(new DataTable().Compute(math, "").ToString());
             }
-        }
+			else if (parts[1] == "mathv2")
+			{
+            List<string> vars = new List<string>();
+				List<float> varsV = new List<float>();
+
+            for (int i =3;i<parts.Length;i++)
+            {
+               vars.Add(parts[i]);
+               varsV.Add(stats.GetValue(parts[i], 0f));
+            }
+
+				string math = parts[2];
+
+            for (int i=0;i<vars.Count;i++)
+            {
+					math = math.Replace(vars[i], varsV[i].ToString());
+            }
+
+            math = math.Replace(',', '.');
+				output = float.Parse(new DataTable().Compute(math, "").ToString());
+			}
+		}
         else
         {
             output = float.Parse(input);

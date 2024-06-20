@@ -185,7 +185,7 @@ public class SLM_Stats : MonoBehaviour
             int id = stats.IndexOf(b);
             if (stats[id].type == tpe.stringType)
             {
-                stats[id].value = value;
+				stats[id].value = value;
             }
             UpdateGUI(id);
         }

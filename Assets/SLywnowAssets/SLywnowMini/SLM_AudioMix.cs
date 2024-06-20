@@ -115,7 +115,20 @@ public class SLM_AudioMix : MonoBehaviour
         }
     }
 
-    public void SetPitch(string name, float pitch)
+	public void SelectClip(string name, string clipname)
+	{
+		CheckNames();
+
+		if (names.Contains(name))
+		{
+			int id = names.IndexOf(name);
+			bool isp = blocks[id].audio.isPlaying;
+            blocks[id].audio.clip = blocks[id].clips[blocks[id].clips.IndexOf(blocks[id].clips.Find(f => f.name == clipname))];
+			if (isp) blocks[id].audio.Play();
+		}
+	}
+
+	public void SetPitch(string name, float pitch)
     {
         CheckNames();
 

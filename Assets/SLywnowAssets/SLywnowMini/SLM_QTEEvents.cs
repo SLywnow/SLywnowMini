@@ -124,7 +124,7 @@ public class SLM_QTEEvents : MonoBehaviour
 
                         if (savestage != stage)
                         {
-                            if (presets[curid].buttonIds[stage].Contains("random"))
+                            if (presets[curid].buttonIds[stage].Contains("random") || presets[curid].buttonIds[stage].Contains("r"))
                             {
                                 butts = new List<string>();
                                 int c = int.Parse(presets[curid].buttonIds[stage].Split('|')[1]);
@@ -155,7 +155,7 @@ public class SLM_QTEEvents : MonoBehaviour
                                 buttons[int.Parse(b)].pressed = false;
                             }
 
-                                savestage = stage;
+                            savestage = stage;
                         }
 
                         List<int> nonbutts = new List<int>();
@@ -725,9 +725,13 @@ public class SLM_QTEEvents : MonoBehaviour
             if (timerText != null )
                 timerText.gameObject.SetActive(false);
             if (progressSlider != null && !presets[curid].disableProgressVis)
-                progressSlider.value = 0;
+            {
+				progressSlider.value = 0;
+            }
+            if (progressSlider != null && presets[curid].disableProgressVis)
+                progressSlider.gameObject.SetActive(false);
 
-            buttons[presets[curid].buttonReaction].obj.SetActive(true);
+			buttons[presets[curid].buttonReaction].obj.SetActive(true);
             concSlider.gameObject.SetActive(true);
             concSlider.value = 0;
             concSlider.minValue = 0;
@@ -785,10 +789,7 @@ public class SLM_QTEEvents : MonoBehaviour
         }
         else if (presets[curid].QteType == SLM_QTEEvents_Preset.qtetpe.basic)
         {
-            foreach (SLM_QTEEvents_Button b in buttons)
-            {
-                b.obj.GetComponent<Image>().color = presets[curid].NonPressed;
-            }
+
         }
         else if (presets[curid].QteType == SLM_QTEEvents_Preset.qtetpe.concentrate)
         {

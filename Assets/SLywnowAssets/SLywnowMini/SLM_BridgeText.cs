@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityStandardAssets.Cameras;
 
 public class SLM_BridgeText : MonoBehaviour
 {

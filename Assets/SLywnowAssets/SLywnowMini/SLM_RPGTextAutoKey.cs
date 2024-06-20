@@ -22,7 +22,7 @@ public class SLM_RPGTextAutoKey : MonoBehaviour
             SaveSystemAlt.StartWork();
 
         sc = GetComponent<SLM_RPGText>();
-        if (!string.IsNullOrEmpty(autoKey))
+        if (!string.IsNullOrEmpty(autoKey) && sc.textopt.auto !=null)
             sc.textopt.auto.isOn = SaveSystemAlt.GetBool(autoKey, autoKeyDefault);
         if (!string.IsNullOrEmpty(autoTimeoutKey))
             sc.textopt.timer = SaveSystemAlt.GetInt(autoTimeoutKey, autoTimeoutKeyDefault);
