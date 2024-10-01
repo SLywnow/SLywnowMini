@@ -10,7 +10,8 @@ public class SLM_CharAI : MonoBehaviour
    public bool useALSL;
    public SLM_ALSLBridge ALSLBridge;
    public SLM_RPGText textsc;
-   public List<SLM_CharAI_Block> chars;
+	public Color defaultColor = Color.white;
+	public List<SLM_CharAI_Block> chars;
 
    public int currentId = -1;
 
@@ -191,7 +192,11 @@ public class SLM_CharAI : MonoBehaviour
 
 		if (!textsc.textopt.useExternalWrite)
       {
-         if (textsc.textopt.text != null)
+         if (textsc.textopt.colorSave == new Color(0, 0, 0, 0))
+            textsc.textopt.colorSave = (defaultColor == new Color(0, 0, 0, 0)) ? new Color(1, 1, 1, 1) : defaultColor;
+
+
+			if (textsc.textopt.text != null)
             textsc.textopt.text.color = textsc.textopt.colorSave;
 
          textsc.charcolor = new Color(0, 0, 0, 0);

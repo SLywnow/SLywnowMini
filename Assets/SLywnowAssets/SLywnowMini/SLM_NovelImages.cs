@@ -6,6 +6,7 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using static SLM_RPGText;
 
 public class SLM_NovelImages : MonoBehaviour
 {
@@ -40,20 +41,20 @@ public class SLM_NovelImages : MonoBehaviour
 			{
 				foreach (int a in anims)
 				{
+					Color curc = layers[a].ImageColor;
 					layers[a].timer += Time.deltaTime;
 					if (!layers[a].showLayer && !layers[a].hideLayer)
 					{
 						if (layers[a].animation == SLM_NovelImages_Block.animtpe.replace)
 						{
-
 							layers[a].imageMask.color =
-								new Color(1, 1, 1, 1 - (layers[a].timer / layers[a].durationInSec));
+								new Color(curc.r, curc.g, curc.b, 1 - (layers[a].timer / layers[a].durationInSec));
 
 							if (layers[a].timer / layers[a].durationInSec >= 1)
 							{
 								layers[a].timer = 0;
 								layers[a].animrun = false;
-								layers[a].imageMask.color = new Color(0, 0, 0, 0);
+								layers[a].imageMask.color = new Color(curc.r, curc.g, curc.b, 0);
 
 								layers[a].onEndAnimation.Invoke();
 								anims.RemoveAt(anims.IndexOf(a));
@@ -62,17 +63,17 @@ public class SLM_NovelImages : MonoBehaviour
 						if (layers[a].animation == SLM_NovelImages_Block.animtpe.pingpong)
 						{
 							layers[a].imageobj.color =
-								new Color(1, 1, 1, ((layers[a].timer / layers[a].durationInSec) - 0.5f) * 2);
+								new Color(curc.r, curc.g, curc.b, ((layers[a].timer / layers[a].durationInSec) - 0.5f) * 2);
 
 							layers[a].imageMask.color =
-								new Color(1, 1, 1, (0.5f - (layers[a].timer / layers[a].durationInSec)) * 2);
+								new Color(curc.r, curc.g, curc.b, (0.5f - (layers[a].timer / layers[a].durationInSec)) * 2);
 
 							if (layers[a].timer / layers[a].durationInSec >= 1)
 							{
 								layers[a].timer = 0;
 								layers[a].animrun = false;
-								layers[a].imageobj.color = new Color(1, 1, 1, 1);
-								layers[a].imageMask.color = new Color(0, 0, 0, 0);
+								layers[a].imageobj.color = new Color(curc.r, curc.g, curc.b, 1);
+								layers[a].imageMask.color = new Color(curc.r, curc.g, curc.b, 0);
 
 								layers[a].onEndAnimation.Invoke();
 								anims.RemoveAt(anims.IndexOf(a));
@@ -83,9 +84,10 @@ public class SLM_NovelImages : MonoBehaviour
 					{
 						if (layers[a].hideLayer)
 						{
+							
 							if (layers[a].imageobj !=null)
 							layers[a].imageobj.color =
-								new Color(1, 1, 1, 1 - (layers[a].timer / layers[a].durationInSec));
+								new Color(curc.r, curc.g, curc.b, 1 - (layers[a].timer / layers[a].durationInSec));
 							if (layers[a].group != null)
 								layers[a].group.alpha = 1 - (layers[a].timer / layers[a].durationInSec);
 
@@ -95,7 +97,7 @@ public class SLM_NovelImages : MonoBehaviour
 								layers[a].animrun = false;
 								layers[a].hideLayer = false;
 								if (layers[a].imageobj != null)
-									layers[a].imageobj.color = new Color(0, 0, 0, 0);
+									layers[a].imageobj.color = new Color(curc.r, curc.g, curc.b, 0);
 								if (layers[a].group != null)
 								{
 									layers[a].group.alpha = 0;
@@ -110,7 +112,7 @@ public class SLM_NovelImages : MonoBehaviour
 						{
 							if (layers[a].imageobj != null)
 								layers[a].imageobj.color =
-								new Color(1, 1, 1, (layers[a].timer / layers[a].durationInSec));
+								new Color(curc.r, curc.g, curc.b, (layers[a].timer / layers[a].durationInSec));
 							if (layers[a].group != null)
 								layers[a].group.alpha = (layers[a].timer / layers[a].durationInSec);
 
@@ -120,7 +122,7 @@ public class SLM_NovelImages : MonoBehaviour
 								layers[a].animrun = false;
 								layers[a].showLayer = false;
 								if (layers[a].imageobj != null)
-									layers[a].imageobj.color = new Color(1, 1, 1, 1);
+									layers[a].imageobj.color = new Color(curc.r, curc.g, curc.b, 1);
 								if (layers[a].group != null)
 								{
 									layers[a].group.alpha = 1;
@@ -217,7 +219,7 @@ public class SLM_NovelImages : MonoBehaviour
 				layers[layer].imageobj.color = layers[layer].ImageColor;
 				if ((spriteName != "<next>") && (spriteName != "<prev>"))
 				{
-					layers[layer].curid = layers[layer].sprites.IndexOf(layers[layer].sprites.Find(f => f.name == spriteName));
+					layers[layer].curid = layers[layer].sprites.IndexOf(layers[layer].sprites.Find(f => f != null && f.name == spriteName));
 					//layers[layer].curid = layers[layer].spriteNames.IndexOf(spriteName);
 				}
 				else
@@ -248,7 +250,7 @@ public class SLM_NovelImages : MonoBehaviour
 				if ((spriteName != "<next>") && (spriteName != "<prev>"))
 				{
 					//layers[layer].imageobj.sprite = layers[layer].sprites[layers[layer].spriteNames.IndexOf(spriteName)];
-					layers[layer].imageobj.sprite = layers[layer].sprites.Find(f => f.name == spriteName);
+					layers[layer].imageobj.sprite = layers[layer].sprites.Find(f => f != null && f.name == spriteName);
 				}
 				else
 				{
@@ -264,7 +266,7 @@ public class SLM_NovelImages : MonoBehaviour
 		{
 			int layer = layers.IndexOf(layers.Find(f => f.name == layerName));
 
-			if ((layers[layer].imageobj != null && layers[layer].imageobj.color != new Color(0, 0, 0, 0)) || (layers[layer].group != null && layers[layer].group.alpha != 0))
+			if ((layers[layer].imageobj != null && layers[layer].imageobj.color.a != 0) || (layers[layer].group != null && layers[layer].group.alpha != 0))
 			{
 				if (layers[layer].imageobj != null)
 					layers[layer].ImageColor = layers[layer].imageobj.color;
@@ -290,7 +292,7 @@ public class SLM_NovelImages : MonoBehaviour
 				else
 				{
 					if (layers[layer].imageobj != null)
-						layers[layer].imageobj.color = new Color(0, 0, 0, 0);
+						layers[layer].imageobj.color = new Color(layers[layer].imageobj.color.r, layers[layer].imageobj.color.g, layers[layer].imageobj.color.b, 0);
 					if (layers[layer].group != null)
 					{
 						layers[layer].group.alpha = 0;
@@ -308,7 +310,7 @@ public class SLM_NovelImages : MonoBehaviour
 		if (layers.Find(f => f.name == layerName) != null)
 		{
 			int layer = layers.IndexOf(layers.Find(f => f.name == layerName));
-			if ((layers[layer].imageobj != null && layers[layer].imageobj.color != new Color(1, 1, 1, 1)) || (layers[layer].group != null && layers[layer].group.alpha != 1))
+			if ((layers[layer].imageobj != null && layers[layer].imageobj.color.a != 1) || (layers[layer].group != null && layers[layer].group.alpha != 1))
 			{
 				if (imageid >= 0)
 				{
@@ -360,13 +362,13 @@ public class SLM_NovelImages : MonoBehaviour
 		if (layers.Find(f => f.name == layerName) != null)
 		{
 			int layer = layers.IndexOf(layers.Find(f => f.name == layerName));
-			if ((layers[layer].imageobj != null && layers[layer].imageobj.color != new Color(1, 1, 1, 1)) || (layers[layer].group != null && layers[layer].group.alpha != 1))
+			if ((layers[layer].imageobj != null && layers[layer].imageobj.color.a != 1) || (layers[layer].group != null && layers[layer].group.alpha != 1))
 			{
 				if (!string.IsNullOrEmpty(spriteName) && !((spriteName =="<next>") || (spriteName == "<prev>")))
 				{
 					if (layers[layer].imageobj != null)
-						layers[layer].imageobj.sprite = layers[layer].sprites.Find(f => f.name == spriteName);
-					layers[layer].curid = layers[layer].sprites.IndexOf(layers[layer].sprites.Find(f => f.name == spriteName));
+						layers[layer].imageobj.sprite = layers[layer].sprites.Find(f => f != null && f.name == spriteName);
+					layers[layer].curid = layers[layer].sprites.IndexOf(layers[layer].sprites.Find(f => f != null && f.name == spriteName));
 				}
 				else
 				{
@@ -465,9 +467,11 @@ public class SLM_NovelImages : MonoBehaviour
 		{
 			int layer = layers.IndexOf(layers.Find(f => f.name == layerName));
 			Color c = Color.white;
-			if (ColorUtility.TryParseHtmlString(color, out c)) ;
-
-			layers[layer].imageobj.color = c;
+			if (ColorUtility.TryParseHtmlString(color, out c))
+			{
+				layers[layer].ImageColor = c;
+				layers[layer].imageobj.color = new Color(c.r, c.g, c.b, layers[layer].imageobj.color.a);
+			}
 		}
 	}
 }

@@ -12,64 +12,34 @@ public class SLM_QTE_Button : EventTrigger
 	public SLM_QTEEvents qte;
 	public string key;
 	public bool onlyMobile;
-	public bool canHold = true;
-	[Min(1)] public int frameSaveClick = 1;
 
-	int frame;
-	bool clicked;
 	bool active;
 
 	void Start ()
 	{
+		if (qte == null)
+			qte = FindObjectOfType<SLM_QTEEvents>();
+
 		active = true;
-#if UNITY_STANDALONE
+#if !UNITY_ANDROID
 		if (onlyMobile)
 			active = false;
 #endif
 	}
 
-	public void Update ()
-	{
-		if (clicked)
-		{
-			if (frame < frameSaveClick)
-				frame++;
-			else
-			{
-				frame = 0;
-				clicked = false;
-				if (qte.pressed.Contains(key))
-					qte.pressed.Remove(key);
-			}
-		}
-	}
-
-	public override void OnPointerClick(PointerEventData eventData)
-	{
-		if (active && !canHold)
-		{
-			frame = 0;
-			clicked = true;
-			if (!qte.pressed.Contains(key))
-				qte.pressed.Add(key);
-		}
-	}
-
 	public override void OnPointerDown(PointerEventData eventData)
 	{
-		if (active && canHold)
+		if (active)
 		{
-			if (!qte.pressed.Contains(key))
-				qte.pressed.Add(key);
+			qte.MobilePress(key);
 		}
 	}
 
 	public override void OnPointerUp(PointerEventData eventData)
 	{
-		if (active && canHold)
+		if (active)
 		{
-			frame = 0;
-			clicked = true;
+			qte.MobilePressDone(key);
 		}
 	}
 }

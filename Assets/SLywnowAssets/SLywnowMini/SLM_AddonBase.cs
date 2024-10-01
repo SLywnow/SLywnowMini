@@ -21,6 +21,12 @@ public class SLM_AddonBase : MonoBehaviour
 		if (commandScript != null)
 			commandScript.addonManager.AddAddon(name, add, commands, nextcommands);
 	}
+}
 
+public interface SLM_AddonBase_Interface
+{
+	void Awake();
 
+	bool Command(string command, string[] args);
+	
 }

@@ -8,7 +8,7 @@ using UnityEngine;
 public class SLM_AudioVolumeSetter : MonoBehaviour
 {
     public string SSAKey;
-    [Range(0, 1)] public float mainVolume = 1;
+    [Range(0, 2)] public float mainVolume = 1;
     [Range(0, 1)] public float optionVolume = 1;
     [Range(0, 1)] public float additionVolume = 1;
     public bool useUpdate = true;

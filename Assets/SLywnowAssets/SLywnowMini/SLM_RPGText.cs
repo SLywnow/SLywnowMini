@@ -321,7 +321,7 @@ public class SLM_RPGText : MonoBehaviour
 
 								curentchar++;
 								stimer = 0;
-								if (audioSource != null)
+								if (audioSource != null && charvoice !=null)
 								{
 									audioSource.Stop();
 								}
@@ -347,7 +347,7 @@ public class SLM_RPGText : MonoBehaviour
 								showtext += words[curentchar];
 								curentchar++;
 								stimer = 0;
-								if (audioSource != null)
+								if (audioSource != null && charvoice != null)
 								{
 									audioSource.Stop();
 								}
@@ -369,7 +369,7 @@ public class SLM_RPGText : MonoBehaviour
 				{
 					stimer = 0;
 					curentchar = -1;
-					if (audioSource != null)
+					if (audioSource != null && charvoice != null)
 					{
 						audioSource.Stop();
 					}
@@ -681,7 +681,7 @@ public class SLM_RPGText : MonoBehaviour
 
 			stimer = 0;
 			curentchar = -1;
-			if (audioSource != null)
+			if (audioSource != null && charvoice != null)
 			{
 				audioSource.Stop();
 			}

@@ -99,13 +99,17 @@ public class SLM_ALSLBridge : MonoBehaviour
 
         }
 
-        List<string> langs = new List<string>();
+		List<string> langs = new List<string>();
+#if UNITY_EDITOR
+		List<ALSL_Perfab_Lang> lngs = (Resources.Load("alsl_perfab", typeof(GameObject)) as GameObject).GetComponent<ALSL_Perfab>().langFiles;
 
-        ALSL_ToSaveJSON keys = new ALSL_ToSaveJSON();
-        keys = JsonUtility.FromJson<ALSL_ToSaveJSON>(FilesSet.LoadStream(Application.streamingAssetsPath + "/ALSL", "keys", "alsldata", false, false));
-        langs = keys.alllangs;
+		foreach (ALSL_Perfab_Lang l in lngs)
+			langs.Add(l.name);
+#else
+     langs = ALSL_Main.alllangs;
+#endif
 
-        string form = setup.format;
+		string form = setup.format;
         if (!setup.useCustomSetUp)
             form = "txt";
 
@@ -169,12 +173,16 @@ public class SLM_ALSLBridge : MonoBehaviour
         }
 
         List<string> langs = new List<string>();
+#if UNITY_EDITOR
+		List<ALSL_Perfab_Lang> lngs = (Resources.Load("alsl_perfab", typeof(GameObject)) as GameObject).GetComponent<ALSL_Perfab>().langFiles;
 
-        ALSL_ToSaveJSON keys = new ALSL_ToSaveJSON();
-        keys = JsonUtility.FromJson<ALSL_ToSaveJSON>(FilesSet.LoadStream(Application.streamingAssetsPath +"/ALSL", "keys", "alsldata", false, false));
-        langs = keys.alllangs;
+      foreach (ALSL_Perfab_Lang l in lngs)
+         langs.Add(l.name);
+#else
+     langs = ALSL_Main.alllangs;
+#endif
 
-        if (!setup.useCustomSetUp)
+		if (!setup.useCustomSetUp)
         {
             string pth = "";
             if (setup.useALSLFolders)
@@ -289,21 +297,23 @@ public class SLM_ALSLBridge : MonoBehaviour
         }
 	}
 
-    [Button("Update strings format to new",ButtonMode.DisabledInPlayMode, ButtonSpacing.After)]
-    public void ConvertStringsFromOldToNew()
-    {
-        if (jsonMode==fileMode._old)
-        {
-            setupStringsV2 = new SLM_ALSLBridge_LoaderStringsV2();
-            setupStringsV2.data = new List<SLM_ALSLBridge_LoaderStringsV2_Key>();
-			for (int i = 0; i < setupStrings.words.Count; i++)
-            {
-                setupStringsV2.data.Add(new SLM_ALSLBridge_LoaderStringsV2_Key() { key = setupStrings.keys[i], word = setupStrings.words[i] });
-			}
+   [Button("Update strings format to new", ButtonMode.DisabledInPlayMode, ButtonSpacing.After)]
+   public void ConvertStringsFromOldToNew()
+   {
+      if (jsonMode == fileMode._old)
+      {
+         setupStringsV2 = new SLM_ALSLBridge_LoaderStringsV2();
+         setupStringsV2.data = new List<SLM_ALSLBridge_LoaderStringsV2_Key>();
+         for (int i = 0; i < setupStrings.words.Count; i++)
+         {
+            setupStringsV2.data.Add(new SLM_ALSLBridge_LoaderStringsV2_Key() { key = setupStrings.keys[i], word = setupStrings.words[i] });
+         }
 
-            jsonMode = fileMode._new;
-        }
-    }
+         jsonMode = fileMode._new;
+
+
+      }
+   }
 
     public string GetStringEditor(string key)
 	{

@@ -5,240 +5,182 @@ using UnityEngine.Audio;
 
 public class SLM_AudioMix : MonoBehaviour
 {
-    public List<SLM_AudioMix_Block> blocks;
+   public List<SLM_AudioMix_Block> blocks;
 
-    List<string> names = new List<string>();
-    List<int> anims = new List<int>();
 
-	void CheckNames()
-    {
-        if (!(names.Count == blocks.Count))
-        {
-            names.Clear();
-            foreach (SLM_AudioMix_Block ch in blocks)
-                names.Add(ch.name);
-        }
-    }
+   private void OnDisable()
+   {
+      foreach (SLM_AudioMix_Block b in blocks)
+      {
+         if (b.shapshots.Count > 0)
+            b.shapshots[0].TransitionTo(0);
+      }
+   }
 
-	private void OnDisable()
-	{
-		foreach (SLM_AudioMix_Block b in blocks)
-		{
-            if (b.shapshots.Count > 0)
-                b.shapshots[0].TransitionTo(0);
-        }
-	}
+   public SLM_AudioMix_Block GetBlock(string name)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-	private void Start()
-	{
-        CheckNames();
-	}
+      return b;
+   }
 
-    public SLM_AudioMix_Block GetBlock(string name)
-    {
-        CheckNames();
+   public int GetID(string name)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-        if (names.Contains(name))
-        {
-            return blocks[names.IndexOf(name)];
-        }
-        else return null;
-    }
+      if (b != null)
+      {
+         return blocks.IndexOf(b);
+      }
+      else return -1;
+   }
 
-    public int GetID(string name)
-    {
-        CheckNames();
+   public void AddClipAndPlay(string name, AudioClip clip)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-        if (names.Contains(name))
-        {
-            return names.IndexOf(name);
-        }
-        else return -1;
-    }
+      if (b != null)
+      {
+         b.clips.Add(clip);
+         b.audio.clip = b.clips[b.clips.Count - 1];
+         b.audio.Play();
+      }
+   }
 
-    public void AddClipAndPlay(string name, AudioClip clip)
-    {
-        CheckNames();
+   public void AddClip(string name, AudioClip clip)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            blocks[id].clips.Add(clip);
-            blocks[id].audio.clip = blocks[id].clips[blocks[id].clips.Count - 1];
-            blocks[id].audio.Play();
-        }
-    }
+      if (b != null)
+      {
+         b.clips.Add(clip);
+      }
+   }
 
-    public void AddClip(string name,AudioClip clip)
-	{
-        CheckNames();
+   public void StartPlay(string name)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            blocks[id].clips.Add(clip);
-        }
-    }
+      if (b != null)
+      {
+         b.audio.Play();
+      }
+   }
 
-    public void StartPlay(string name)
-    {
-        CheckNames();
+   public void StopPlay(string name)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            blocks[id].audio.Play();
-        }
-    }
+      if (b != null)
+      {
+         b.audio.Stop();
+      }
+   }
 
-    public void StopPlay(string name)
-	{
-        CheckNames();
+   public void SelectClip(string name, int clipId)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-        if (names.Contains(name))
-		{
-            int id = names.IndexOf(name);
-            blocks[id].audio.Stop();
-        }
-	}
+      if (b != null)
+      {
+         bool isp = b.audio.isPlaying;
+         b.audio.clip = b.clips[clipId];
+         if (isp) b.audio.Play();
+      }
+   }
 
-    public void SelectClip(string name, int clipId)
-    {
-        CheckNames();
+   public void SelectClip(string name, string clipname)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            bool isp = blocks[id].audio.isPlaying;
-            blocks[id].audio.clip = blocks[id].clips[clipId];
-            if (isp) blocks[id].audio.Play();
-        }
-    }
+      if (b != null)
+      {
+         bool isp = b.audio.isPlaying;
+         b.audio.clip = b.clips[b.clips.IndexOf(b.clips.Find(f => f.name == clipname))];
+         if (isp) b.audio.Play();
+      }
+   }
 
-	public void SelectClip(string name, string clipname)
-	{
-		CheckNames();
+   public void SetPitch(string name, float pitch)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-		if (names.Contains(name))
-		{
-			int id = names.IndexOf(name);
-			bool isp = blocks[id].audio.isPlaying;
-            blocks[id].audio.clip = blocks[id].clips[blocks[id].clips.IndexOf(blocks[id].clips.Find(f => f.name == clipname))];
-			if (isp) blocks[id].audio.Play();
-		}
-	}
+      if (b != null)
+      {
+         b.audio.pitch = pitch;
+      }
+   }
 
-	public void SetPitch(string name, float pitch)
-    {
-        CheckNames();
+   public void SetVolume(string name, float volume)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            blocks[id].audio.pitch = pitch;
-        }
-    }
+      if (b != null)
+      {
+         float vol = volume;
+         if (vol < 0) vol = 0;
 
-    public void SetVolume(string name, float volume)
-    {
-        CheckNames();
+         if (b.useAudioVolume)
+         {
+            b.audio.gameObject.GetComponent<SLM_AudioVolumeSetter>().mainVolume = vol;
+         }
+         else
+         {
+            if (vol > 1) vol = 1;
+            b.audio.volume = vol;
+         }
+      }
+   }
 
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
+   public void SetPriority(string name, int priority)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-            float vol = volume;
-            if (vol < 0) vol = 0;
-            else if (vol > 1) vol = 1;
+      if (b != null)
+      {
+         b.audio.priority = priority;
+      }
+   }
 
-            if (blocks[id].useAudioVolume)
-                blocks[id].audio.gameObject.GetComponent<SLM_AudioVolumeSetter>().mainVolume = vol;
-            else
-                blocks[id].audio.volume = vol;
-        }
-    }
+   public void SetStereoPan(string name, float stereopan)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-    public void SetPriority(string name, int priority)
-    {
-        CheckNames();
+      if (b != null)
+      {
+         b.audio.panStereo = stereopan;
+      }
+   }
 
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            blocks[id].audio.priority = priority;
-        }
-    }
+   public void SetLoop(string name, bool loop)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-    public void SetStereoPan(string name, float stereopan)
-    {
-        CheckNames();
+      if (b != null)
+      {
+         b.audio.loop = loop;
+      }
+   }
 
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            blocks[id].audio.panStereo = stereopan;
-        }
-    }
+   public void SetMute(string name, bool mute)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-    public void SetLoop(string name, bool loop)
-    {
-        CheckNames();
+      if (b != null)
+      {
+         b.audio.mute = mute;
+      }
+   }
 
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            blocks[id].audio.loop = loop;
-        }
-    }
+   public void SetSnapshot(string name, int num, float time = 0)
+   {
+      SLM_AudioMix_Block b = blocks.Find(f => f.name == name);
 
-    public void SetMute(string name, bool mute)
-    {
-        CheckNames();
-
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            blocks[id].audio.mute = mute;
-        }
-    }
-
-    public void SetSnapshot(string name, int num, float time=0)
-	{
-        CheckNames();
-
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            blocks[id].shapshots[num].TransitionTo(time);
-        }
-    }
-
-    /*public void SetMixer(string name, int num)
-    {
-        CheckNames();
-
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            bool pl = blocks[id].audio.isPlaying;
-            blocks[id].audio.outputAudioMixerGroup = blocks[id].mixers[num];
-            if (pl)
-                blocks[id].audio.Play();
-        }
-    }
-    public void DisableMixer(string name)
-    {
-        CheckNames();
-
-        if (names.Contains(name))
-        {
-            int id = names.IndexOf(name);
-            bool pl = blocks[id].audio.isPlaying;
-            blocks[id].audio.outputAudioMixerGroup = null;
-            if (pl)
-                blocks[id].audio.Play();
-        }
-    }*/
+      if (b != null)
+      {
+         b.shapshots[num].TransitionTo(time);
+      }
+   }
 }
 
 [System.Serializable]
